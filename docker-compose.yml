@@ -1,0 +1,35 @@
+services:
+  api:
+    image: node:18-alpine
+    working_dir: /api
+    command:
+      - yarn install --production
+      - yarn prebuild
+      - yarn build
+      - yarn schema:sync
+      - yarn migrate:generate -- ./migrations/migration  -d ./src/app.module.ts
+      - yarn migrate:run
+    ports:
+      - "3000:80/api"
+    expose:
+      - "3000"
+  app:
+    image: node:18-alpine
+    working_dir: /app
+    command:
+      - yarn install --production
+      - yarn build
+      - yarn start
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    volumes:
+      - "/var/run/postgres/postgres.sock:/var/run/postgres/postgres.sock"
+      - "db:/var/lib/postgresql/data"
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+volumes:
+  db:
