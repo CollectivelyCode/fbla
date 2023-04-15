@@ -30,6 +30,7 @@ export class AuthController {
         res.cookie("auth_token", login_data.auth_token)
         return login_data
     }
+    @Public()
     @Post("signup")
     async signUp(@Body() signupDto: SignupDto, @Req() req: Request){
         await this.authService.signUp(signupDto.password, signupDto.username, signupDto.accountType, signupDto.studentData, signupDto.signUpCode )
