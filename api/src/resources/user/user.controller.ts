@@ -1,25 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {Body, Controller, Delete, Get, Param, Patch, Request, UnauthorizedException} from '@nestjs/common';
+import {UserService} from './user.service';
+import {UpdateUserDto} from './dto/update-user.dto';
+import {Roles} from "../../decorators/roles.decorator";
+import {UserRole} from "../../enum/UserRole";
+import {StudentService} from "../student/student.service";
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
-
+  @Roles(UserRole.ADMIN)
   @Get()
   findAll() {
     return this.userService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+  findOne(@Param('id') id: number, @Request() req) {
+    if (!req.user || (req.user.id != id && req.user.roles?.includes(UserRole.ADMIN))){
+      throw new UnauthorizedException()
+    }
   }
 
   @Patch(':id')

@@ -3,26 +3,31 @@ import {Reflector} from "@nestjs/core";
 import {Observable} from "rxjs";
 import {UserRole} from "../enum/UserRole";
 import {ROLES_KEY} from "../decorators/roles.decorator";
+import {HttpArgumentsHost} from "@nestjs/common/interfaces";
+import {Request} from "express";
+import {User} from "../resources/user/entities/user.entity";
+import {RequestWithUser} from "../types/RequestWithUser";
+import {UserService} from "../resources/user/user.service";
 @Injectable()
 export class RolesGuard implements CanActivate {
-    constructor(private reflector: Reflector) {}
-    canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    constructor(private userService: UserService, private reflector: Reflector) {}
+    async canActivate(executionContext: ExecutionContext): Promise<boolean> {
         // Get roles required by endpoint and the request & execution context
         const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-            context.getHandler(),
-            context.getClass()
+            executionContext.getHandler(),
+            executionContext.getClass()
         ])
-        console.log(requiredRoles)
         // If endpoint doesn't have any roles, ignore
         if(!requiredRoles){
             return true
         }
-        const request = context.switchToHttp().getRequest()
-        // Allow other local services (NextJS Sever Side Components, local HTTP testing tools) to pass through the authorization logic
-        if(request.ip == "127.0.0.1"|| "::1"){
+        const httpContext: HttpArgumentsHost = executionContext.switchToHttp()
+        const req = httpContext.getRequest<RequestWithUser>()
+        // Allow other local services (NextJS Sever Side Components, local HTTP testing tools) to pass through the authorization logic (only if they desire)
+        if((req.ip == "127.0.0.1"|| req.ip == "::1") && req.get("X-Local-Passthrough") != "ignore" ){
             return true
         }
-        const user = request.user
+        const user: User = await this.userService.findOneByUsername(req.user.username)
         // If user does not exist, prevent endpoint access
         if (!user) {
             return false

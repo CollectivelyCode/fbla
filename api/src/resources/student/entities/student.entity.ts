@@ -1,5 +1,8 @@
-import {Column, Entity, ManyToMany, OneToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinTable, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn} from "typeorm";
 import {Event} from "../../event/entities/event.entity";
+import {User} from "../../user/entities/user.entity";
+import {PrizeRedemption} from "../../prize/entities/prizeRedemption.entity";
+import {EventAttendance} from "../../event/entities/eventAttendance.entity";
 
 @Entity()
 export class Student {
@@ -11,11 +14,16 @@ export class Student {
     grade: number
     @Column()
     points: number
-    @Column()
-    userId: number
-    @ManyToMany(type => Event, event => event.attendees)
-    eventAttendance: Event[]
 
+    @OneToMany(() => EventAttendance, (eventAttendance) => eventAttendance.student)
+    @JoinTable()
+    attendanceRecords: EventAttendance[]
+
+    @OneToMany(() => PrizeRedemption, (prizeRedemption) => prizeRedemption.redeemedFor)
+    prizeRedemptions: PrizeRedemption[]
+
+    @OneToOne(() => User, (user) => user.student)
+    user: User
 }
 
 
