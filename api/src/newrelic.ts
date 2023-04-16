@@ -16,6 +16,11 @@ exports.config = {
     logging: {
         level: 'trace',
     },
+    application_logging: {
+        forwarding: {
+            enabled: true
+        }
+    },
     allow_all_headers: true,
     attributes: {
         /**
