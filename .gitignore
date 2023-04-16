@@ -3,6 +3,7 @@
 **/node_modules
 **/migrations
 **/.next
+**/**.env
 # Logs
 logs
 *.log
